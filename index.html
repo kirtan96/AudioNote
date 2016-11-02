@@ -1,4 +1,215 @@
 <!DOCTYPE HTML>
 <head>
+  <link rel="stylesheet" type="text/css" href="audionote.css">
+  <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+  <img id="logo" src="ic_launcher.png">
   <h1>Audio Note</h1>
 </head>
+<body>
+  <div class="li" style="display:none;">
+    <input id="email" placeholder="Email"></input>
+    <p id="live">Not a valid email.</p>
+    <input id="pass" type="password" placeholder="Password"></input>
+    <p id="livp" style="color:red;margin-left:20px">Wrong password.</p>
+    <button id="LoginButton">Sign In</button>
+    <BUTTON id="SignupButton">Create an account</BUTTON>  
+  </div>
+
+  <div class="su" style="display: none;">
+    <input id="suname" type="text" placeholder="Name"></input>
+    <p id="suvn">Please entern your name.</p>
+    <input id="suemail" type="Email" placeholder="Email"></input>
+    <p id="suve">Not a valid email.</p>
+    <input id="supass" type="password" placeholder="Password" minLength="8" maxLength=""></input>
+    <p id="suvp">Not a valid password.</p>
+    <input id="suconfpass" type="password" placeholder="Confirm Password"></input>
+    <p id="suvcp">Password does not match.</p>
+    <button id="suSignupButton">Sign Up</button>
+    <p id="suvu">User with this email already exists!</p>
+    <button id="sucancel">Cancel</button>
+    <p>Valid password characteristics:</p>
+    <ul>
+      <li>8 - 15 characters</li>
+      <li>Must contain one uppercase [A-Z], one lowercase [a-z], one number [0-9], and a special character [!@#$%^&*]</li>
+    </ul>
+  </div>
+  
+</body>
+
+<script src="https://www.gstatic.com/firebasejs/3.5.1/firebase.js"></script>
+<script src="https://www.gstatic.com/firebasejs/3.5.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/3.5.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/3.5.0/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/3.5.0/firebase-messaging.js"></script>
+
+<script>
+  // Initialize Firebase
+  var config = {
+    apiKey: "AIzaSyBBmvxKIyXz_SnNqKIQljm2kbl1AeZZgrE",
+    authDomain: "audio-note-pro.firebaseapp.com",
+    databaseURL: "https://audio-note-pro.firebaseio.com",
+    storageBucket: "audio-note-pro.appspot.com",
+    messagingSenderId: "1014839766664"
+  };
+  firebase.initializeApp(config);
+
+$(document).ready(function() {
+    $(".su").hide();
+});
+
+  $("#logo").hide();
+  $(".su").hide();
+  var user = firebase.auth().currentUser;
+  var liemail = $("#email");
+  var lipass = $("#pass");
+  var liLoginButton = $("#LoginButton");
+  var liSignupButton = $("#SignupButton");
+  var suname = $("#suname");
+  var suemail = $("#suemail");
+  var supass = $("#supass");
+  var suconfpass = $("#suconfpass");
+  var suSignupButton = $("#suSignupButton");
+  var sucancel = $("#sucancel");
+  var li = $(".li");
+  var su = $(".su");
+
+  firebase.auth().onAuthStateChanged(function(u) {
+    if (u) {
+      if(li.is(":visible")){
+        user = u;
+        li.slideUp(800, function(){
+          li.hide();
+          window.location.href = 'player.html';
+        });
+      }
+      else{
+        var adaNameRef = firebase.database().ref('users/' + u.uid + '');
+        adaNameRef.child('name').set(suname.val());
+        su.slideUp(800, function() {
+          su.hide();
+          window.location.href = 'player.html';
+        });
+      }
+    } else {
+      li.show();
+      if(li.is(":visible")){
+        $("#logo").show();
+        li.hide();
+        li.slideDown(800);
+      }
+    }
+  });
+
+  liLoginButton.click(function(){
+    $("#livp").hide();
+    $("#live").hide();
+    firebase.auth().signInWithEmailAndPassword(liemail.val(), lipass.val()).catch(function(error) {
+      // Handle Errors here.
+      var errorCode = error.code;
+      var errorMessage = error.message;
+      if(!validateEmail(liemail.val())){
+        $("#live").show();
+      }
+      $("#livp").show();
+      return;
+    });
+    user = firebase.auth().currentUser;
+  });
+
+  liSignupButton.click(function(){
+    li.slideUp(800, function() {
+          li.hide();
+          su.slideDown(800);
+          $("#suvn").hide();
+          $("#suve").hide();
+          $("#suvp").hide();
+          $("#suvcp").hide();
+          $("#suvu").hide();
+          $("#livp").hide();
+          $("#live").hide();
+      });
+  });
+
+  lipass.keyup(function(event){
+    if(event.keyCode == 13){
+      liLoginButton.click();
+    }
+  });
+
+  suSignupButton.click(function(){
+    $("#suvn").hide();
+    $("#suve").hide();
+    $("#suvp").hide();
+    $("#suvcp").hide();
+    $("#suvu").hide();
+    if(supass.val().length >= 6 && 
+      supass.val()===suconfpass.val() && 
+      suname.val().length > 0 && 
+      validateEmail(suemail.val()) &&
+      validPass(supass.val())){
+      user = firebase.auth().createUserWithEmailAndPassword(suemail.val(), supass.val()).catch(function(error) {
+        var errorCode = error.code;
+        var errorMessage = error.message;
+        $("#suvu").show();
+        return;
+      });
+    }
+    else{
+      if(suname.val().length === 0){
+        $("#suvn").show();
+      }
+      if(!validateEmail(suemail.val())){
+        $("#suve").show();
+      }
+      if(!validPass(supass.val())){
+        $("#suvp").show();
+      }
+      if(supass.val()!==suconfpass.val()){
+        $("#suvcp").show();
+      }
+    }
+  });
+
+  sucancel.click(function(){
+    su.slideUp(800, function(){
+      su.hide();
+      li.slideDown(800, function(){
+        li.show();
+        $("#suvn").hide();
+        $("#suve").hide();
+        $("#suvp").hide();
+        $("#suvcp").hide();
+        $("#suvu").hide();
+        $("#livp").hide();
+        $("#live").hide();
+      });
+    });
+  });
+
+  suconfpass.keyup(function(event){
+    if(event.keyCode == 13){
+      suSignupButton.click();
+    }
+  });
+
+  function validateEmail(email) {
+      var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+      return re.test(email);
+  }
+
+  function validPass(pass){
+    var decimal=  /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9])(?!.*\s).{8,15}$/; 
+    if(pass.length < 8 || pass.length > 15){
+      return false;
+    } 
+    if(pass.match(decimal))   
+    {   
+      return true;  
+    }  
+    else  
+    {   
+      return false;  
+    }
+  }
+
+</script>
