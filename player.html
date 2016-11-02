@@ -1,0 +1,184 @@
+<!DOCTYPE HTML>
+<head>
+  <link rel="stylesheet" type="text/css" href="audionote.css">
+  <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/3.5.1/firebase.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/3.5.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/3.5.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/3.5.0/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/3.5.0/firebase-storage.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/3.5.0/firebase-messaging.js"></script>
+
+
+  <h1>Audio Note</h1>
+  <button id="SignoutButton">Sign out</button>
+</head>
+
+<body>
+  <div class="welcome">
+    <p id="welcome"></p>
+    <input type="file" name="myfile" accept="audio/mp3" id="choose"></input>
+    <br>
+    <input id="fileName" placeholder="File name" type="text">
+    <button id="uploadButton">Upload</button>
+    <p id="fae">File with this name already exists.</p>
+    <br>
+    <audio id="audio" controls>
+      <source id="mp3Source" type="audio/mp3" src=""></source>
+    </audio>
+    <progress value="0" max="100" id="uploader">0%</progress>
+    <br>
+    
+    
+  </div>
+  <div>
+    <select id="selects" size="13">
+      <menu type="context" id="mymenu">
+        <menuitem label="Refresh Post" onclick="window.location.reload();"></menuitem>
+        <menuitem label="Skip to Comments" onclick="window.location='#comments';"></menuitem>
+        <menu label="Share on...">
+          <menuitem label="Twitter" onclick="goTo('//twitter.com/intent/tweet?text=' + document.title + ':  ' + window.location.href);"></menuitem>
+          <menuitem label="Facebook" onclick="goTo('//facebook.com/sharer/sharer.php?u=' + window.location.href);"></menuitem>
+        </menu>
+      </menu>
+    </select>
+  </div>
+</body>
+
+
+<script>
+  // Initialize Firebase
+  var config = {
+    apiKey: "AIzaSyBBmvxKIyXz_SnNqKIQljm2kbl1AeZZgrE",
+    authDomain: "audio-note-pro.firebaseapp.com",
+    databaseURL: "https://audio-note-pro.firebaseio.com",
+    storageBucket: "audio-note-pro.appspot.com",
+    messagingSenderId: "1014839766664"
+  };
+  firebase.initializeApp(config);
+
+  firebase.auth().onAuthStateChanged(u => {
+    if (u) {
+      user = u;
+      userId = u.uid;
+      firebase.database().ref('/users/' + userId).once('value').then(function(snapshot) {
+        var name = snapshot.val().name;
+        if(snapshot.val().allFiles){
+          var files = snapshot.val().allFiles;
+          allFiles = files.split("||");
+        }
+        $("#welcome").text(name);
+        allFiles.forEach(function(elem){
+          if(elem!==''){
+            var option = document.createElement("option");
+            option.text = elem;
+            document.getElementById("selects").add(option);
+            selectedIndex++;
+          }
+        });
+        fae.hide();
+      });
+    } else {
+      window.location.href = 'audionote.html';
+    }
+  });
+
+  var user = firebase.auth().currentUser;
+  var userId;
+  var fileInput = $("#fileName");
+  //fileInput.hide();
+  var uploadButton = $("#uploadButton");
+  //uploadButton.hide();
+  var selects = $("#selects");
+  var fileButton = $("#choose");
+  var SignoutButton = $("#SignoutButton");
+  var uploader = $("#uploader");
+  var audio = document.getElementById('audio');
+  var source = document.getElementById('mp3Source');
+  var fae = $("#fae");
+  fae.hide();
+  var allFiles = [];
+  var selectedIndex = 0;
+
+  selects.click(function(){
+    var x = document.getElementById("selects").selectedIndex;
+    var y = document.getElementById("selects").options;
+    if(x !== selectedIndex){
+      firebase.database().ref('/users/' + userId + '/audioFiles/'+y[x].text).once('value').then(function(snapshot) {
+        var url = snapshot.val().audioURL;
+        source.src=url;
+        audio.load(); //call this to just preload the audio without playing
+        audio.play();
+        selectedIndex = x;
+      });
+    }
+  });
+
+  var database = firebase.database();
+
+  fileButton.change(function(e){
+    var file = e.target.files[0];
+    fileInput.val(file.name.replace(".mp3", "").trim());
+    uploadButton.click(function(){
+      fae.hide();
+      if(valid(fileInput.val().trim())){
+        var storageRef = firebase.storage().ref(userId+"/"+ fileInput.val().trim());
+        var task = storageRef.put(file);
+        task.on('state_changed', 
+        function progress(snapshot){
+          var percentage = (snapshot.bytesTransferred/snapshot.totalBytes)*100;
+          uploader.val(percentage);
+        },
+        function error(err){
+
+        },
+        function complete(){
+          allFiles.push(fileInput.val().trim());
+          var adaNameRef = firebase.database().ref('users/' + userId + '');
+          adaNameRef.child('allFiles').set(getAllFiles());
+          uploader.val(0);
+          fileButton.val(null);
+          var option = document.createElement("option");
+          option.text = fileInput.val();
+          document.getElementById("selects").add(option);
+          selectedIndex++;
+          storageRef.getDownloadURL().then(function(url) {
+            var adaNameRef = firebase.database().ref('users/' + userId + '/audioFiles/'+fileInput.val());
+            adaNameRef.child('audioURL').set(url);
+            source.src=url;
+            audio.load(); //call this to just preload the audio without playing
+            audio.play(); //call this to play the song right away
+            fileInput.val("");
+          });
+        });
+      }
+      else
+      {
+        fae.show();
+      }
+    });
+  });
+
+  SignoutButton.click(function(){
+    firebase.auth().signOut();
+    window.location.href = 'audionote.html';
+  });
+
+  function valid(file){
+    if(file.length === 0){
+      return false;
+    }
+    return !allFiles.includes(file);
+  }
+
+  function getAllFiles(){
+    var a = "";
+    allFiles.forEach(function(elem){
+      if(elem !== ''){
+        a+=elem+"||";
+      }
+    });
+    return a;
+  }
+
+</script>
