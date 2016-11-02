@@ -33,14 +33,6 @@
   </div>
   <div>
     <select id="selects" size="13">
-      <menu type="context" id="mymenu">
-        <menuitem label="Refresh Post" onclick="window.location.reload();"></menuitem>
-        <menuitem label="Skip to Comments" onclick="window.location='#comments';"></menuitem>
-        <menu label="Share on...">
-          <menuitem label="Twitter" onclick="goTo('//twitter.com/intent/tweet?text=' + document.title + ':  ' + window.location.href);"></menuitem>
-          <menuitem label="Facebook" onclick="goTo('//facebook.com/sharer/sharer.php?u=' + window.location.href);"></menuitem>
-        </menu>
-      </menu>
     </select>
   </div>
 </body>
@@ -79,7 +71,7 @@
         fae.hide();
       });
     } else {
-      window.location.href = 'audionote.html';
+      window.location.href = 'index.html';
     }
   });
 
@@ -161,7 +153,7 @@
 
   SignoutButton.click(function(){
     firebase.auth().signOut();
-    window.location.href = 'audionote.html';
+    window.location.href = 'index.html';
   });
 
   function valid(file){
