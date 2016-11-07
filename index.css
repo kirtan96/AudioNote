@@ -1,0 +1,74 @@
+#logo{
+	width: 15%;
+	min-width: 150px;
+	height: 15%;
+	display: block;
+	margin: 0 auto;
+	padding-top: 20px;
+}
+
+h1{
+	text-align: center;
+	color: #6EBDB7;
+}
+
+body{
+	background-color: #F8F8DA;
+	font-family: sans serif;
+}
+
+input{
+	border:2px solid #6EBDB7;
+	display: block;
+	width: 90%;
+	max-width: 250px;
+	max-height: 30px;
+	height: 30px;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 0px;
+	margin-bottom: 10px;
+	font-size: 18px;
+	border-radius: 5px;
+}
+
+.su, .li{
+	display: block;
+	margin: 0 auto;
+	padding: 25px;
+	width:25%;
+	min-width: 250px;
+	border:3px solid #5992DC;
+	border-radius: 10px;
+	background-color: #F5F5F5;
+}
+
+#live, #livp,
+#suvn, #suve,
+#suvp, #suvcp,#suvu{
+	color:red;
+	margin-left:20px;
+	margin-top: -5px;
+	font-family: Arial, sans-serif;
+	display: none;
+}
+
+#LoginButton{
+	margin-bottom: 10px;
+}
+
+#suSignupButton{
+	margin-bottom: 8px;
+}
+
+button{
+	border:2px solid #6EBDB7;
+	border-radius: 50px;
+	font-size: 22px;
+	display: block;
+	margin: 0 auto;
+	width: 90%;
+	color: #5992DC;
+	background-color: #fff;
+	margin-top: 10px;
+}
