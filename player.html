@@ -1,176 +1,233 @@
 <!DOCTYPE HTML>
 <head>
-  <link rel="stylesheet" type="text/css" href="audionote.css">
-  <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+  
+  <link rel="stylesheet" type="text/css" href="player.css">
+  <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/3.5.1/firebase.js"></script>
   <script src="https://www.gstatic.com/firebasejs/3.5.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/3.5.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/3.5.0/firebase-database.js"></script>
   <script src="https://www.gstatic.com/firebasejs/3.5.0/firebase-storage.js"></script>
   <script src="https://www.gstatic.com/firebasejs/3.5.0/firebase-messaging.js"></script>
+  
+
 
 
   <h1>Audio Note</h1>
   <button id="SignoutButton">Sign out</button>
+  <p id="welcome"></p>
 </head>
 
 <body>
   <div class="welcome">
-    <p id="welcome"></p>
     <input type="file" name="myfile" accept="audio/mp3" id="choose"></input>
     <br>
     <input id="fileName" placeholder="File name" type="text">
     <button id="uploadButton">Upload</button>
     <p id="fae">File with this name already exists.</p>
     <br>
+    <progress value="0" max="100" id="uploader">0%</progress>
+    <br>
+  </div>
+
+  <div id="myModal" class="modal">
+    <div class="modal-content">
+      <span class="close">×</span>
+      <input id="note"></input>
+      <button id="addNote">Add</button>
+    </div>
+  </div>
+
+  <div class="list">
+    <select id="selects" size="13"></select>
+  </div>
+
+  <div class="notes">
     <audio id="audio" controls>
       <source id="mp3Source" type="audio/mp3" src=""></source>
     </audio>
-    <progress value="0" max="100" id="uploader">0%</progress>
+    <br>
+    <select id="notes" size="12" style="float:right;"></select>
     <br>
     
-    
-  </div>
-  <div>
-    <select id="selects" size="13">
-    </select>
+    <button id="deleteNoteButton">Delete</button>
+    <button id="editNoteButton">Edit</button>
+    <button id="addButton">Add</button>
+    <br>
   </div>
 </body>
 
-
 <script>
-  // Initialize Firebase
-  var config = {
-    apiKey: "AIzaSyBBmvxKIyXz_SnNqKIQljm2kbl1AeZZgrE",
-    authDomain: "audio-note-pro.firebaseapp.com",
-    databaseURL: "https://audio-note-pro.firebaseio.com",
-    storageBucket: "audio-note-pro.appspot.com",
-    messagingSenderId: "1014839766664"
-  };
-  firebase.initializeApp(config);
+    // Initialize Firebase
+    var config = {
+      apiKey: "AIzaSyBBmvxKIyXz_SnNqKIQljm2kbl1AeZZgrE",
+      authDomain: "audio-note-pro.firebaseapp.com",
+      databaseURL: "https://audio-note-pro.firebaseio.com",
+      storageBucket: "audio-note-pro.appspot.com",
+      messagingSenderId: "1014839766664"
+    };
+    firebase.initializeApp(config);
 
-  firebase.auth().onAuthStateChanged(u => {
-    if (u) {
-      user = u;
-      userId = u.uid;
-      firebase.database().ref('/users/' + userId).once('value').then(function(snapshot) {
-        var name = snapshot.val().name;
-        if(snapshot.val().allFiles){
-          var files = snapshot.val().allFiles;
-          allFiles = files.split("||");
-        }
-        $("#welcome").text(name);
-        allFiles.forEach(function(elem){
-          if(elem!==''){
+    firebase.auth().onAuthStateChanged(u => {
+      if (u) {
+        user = u;
+        userId = u.uid;
+        firebase.database().ref('/users/' + userId).once('value').then(function(snapshot) {
+          var name = snapshot.val().name;
+          if(snapshot.val().allFiles){
+            var files = snapshot.val().allFiles;
+            allFiles = files.split("||");
+          }
+          $("#welcome").text(name);
+          allFiles.forEach(function(elem){
+            if(elem!==''){
+              var option = document.createElement("option");
+              option.text = elem;
+              document.getElementById("selects").add(option);
+              
+              selectedIndex++;
+            }
+          });
+          fae.hide();
+        });
+      } else {
+        window.location.href = 'index.html';
+      }
+    });
+
+    var user = firebase.auth().currentUser;
+    var userId;
+    var fileInput = $("#fileName");
+    //fileInput.hide();
+    var uploadButton = $("#uploadButton");
+    //uploadButton.hide();
+    var selects = $("#selects");
+    var fileButton = $("#choose");
+    var SignoutButton = $("#SignoutButton");
+    var uploader = $("#uploader");
+    var audio = document.getElementById('audio');
+    var source = document.getElementById('mp3Source');
+    var fae = $("#fae");
+    fae.hide();
+    var allFiles = [];
+    var selectedIndex = 0;
+
+    // Get the modal
+    var modal = document.getElementById('myModal');
+
+    // Get the button that opens the modal
+    var btn = document.getElementById("addButton");
+    var add = $("#addNote");
+    var input = document.getElementById("note");
+    // Get the <span> element that closes the modal
+    var span = $(".close");
+
+    selects.click(function(){
+      var x = document.getElementById("selects").selectedIndex;
+      var y = document.getElementById("selects").options;
+      if(x !== selectedIndex){
+        firebase.database().ref('/users/' + userId + '/audioFiles/'+y[x].text).once('value').then(function(snapshot) {
+          var url = snapshot.val().audioURL;
+          source.src=url;
+          audio.load(); //call this to just preload the audio without playing
+          audio.play();
+          selectedIndex = x;
+        });
+      }
+    });
+
+    var database = firebase.database();
+
+    fileButton.change(function(e){
+      var file = e.target.files[0];
+      fileInput.val(file.name.replace(".mp3", "").trim());
+      uploadButton.click(function(){
+        fae.hide();
+        if(valid(fileInput.val().trim())){
+          var storageRef = firebase.storage().ref(userId+"/"+ fileInput.val().trim());
+          var task = storageRef.put(file);
+          task.on('state_changed', 
+          function progress(snapshot){
+            var percentage = (snapshot.bytesTransferred/snapshot.totalBytes)*100;
+            uploader.val(percentage);
+          },
+          function error(err){
+
+          },
+          function complete(){
+            allFiles.push(fileInput.val().trim());
+            var adaNameRef = firebase.database().ref('users/' + userId + '');
+            adaNameRef.child('allFiles').set(getAllFiles());
+            uploader.val(0);
+            fileButton.val(null);
             var option = document.createElement("option");
-            option.text = elem;
+            option.text = fileInput.val();
             document.getElementById("selects").add(option);
             selectedIndex++;
-          }
-        });
-        fae.hide();
-      });
-    } else {
-      window.location.href = 'index.html';
-    }
-  });
-
-  var user = firebase.auth().currentUser;
-  var userId;
-  var fileInput = $("#fileName");
-  //fileInput.hide();
-  var uploadButton = $("#uploadButton");
-  //uploadButton.hide();
-  var selects = $("#selects");
-  var fileButton = $("#choose");
-  var SignoutButton = $("#SignoutButton");
-  var uploader = $("#uploader");
-  var audio = document.getElementById('audio');
-  var source = document.getElementById('mp3Source');
-  var fae = $("#fae");
-  fae.hide();
-  var allFiles = [];
-  var selectedIndex = 0;
-
-  selects.click(function(){
-    var x = document.getElementById("selects").selectedIndex;
-    var y = document.getElementById("selects").options;
-    if(x !== selectedIndex){
-      firebase.database().ref('/users/' + userId + '/audioFiles/'+y[x].text).once('value').then(function(snapshot) {
-        var url = snapshot.val().audioURL;
-        source.src=url;
-        audio.load(); //call this to just preload the audio without playing
-        audio.play();
-        selectedIndex = x;
-      });
-    }
-  });
-
-  var database = firebase.database();
-
-  fileButton.change(function(e){
-    var file = e.target.files[0];
-    fileInput.val(file.name.replace(".mp3", "").trim());
-    uploadButton.click(function(){
-      fae.hide();
-      if(valid(fileInput.val().trim())){
-        var storageRef = firebase.storage().ref(userId+"/"+ fileInput.val().trim());
-        var task = storageRef.put(file);
-        task.on('state_changed', 
-        function progress(snapshot){
-          var percentage = (snapshot.bytesTransferred/snapshot.totalBytes)*100;
-          uploader.val(percentage);
-        },
-        function error(err){
-
-        },
-        function complete(){
-          allFiles.push(fileInput.val().trim());
-          var adaNameRef = firebase.database().ref('users/' + userId + '');
-          adaNameRef.child('allFiles').set(getAllFiles());
-          uploader.val(0);
-          fileButton.val(null);
-          var option = document.createElement("option");
-          option.text = fileInput.val();
-          document.getElementById("selects").add(option);
-          selectedIndex++;
-          storageRef.getDownloadURL().then(function(url) {
-            var adaNameRef = firebase.database().ref('users/' + userId + '/audioFiles/'+fileInput.val());
-            adaNameRef.child('audioURL').set(url);
-            source.src=url;
-            audio.load(); //call this to just preload the audio without playing
-            audio.play(); //call this to play the song right away
-            fileInput.val("");
+            storageRef.getDownloadURL().then(function(url) {
+              var adaNameRef = firebase.database().ref('users/' + userId + '/audioFiles/'+fileInput.val());
+              adaNameRef.child('audioURL').set(url);
+              source.src=url;
+              audio.load(); //call this to just preload the audio without playing
+              audio.play(); //call this to play the song right away
+              fileInput.val("");
+            });
           });
-        });
-      }
-      else
-      {
-        fae.show();
-      }
+        }
+        else
+        {
+          fae.show();
+        }
+      });
     });
-  });
 
-  SignoutButton.click(function(){
-    firebase.auth().signOut();
-    window.location.href = 'index.html';
-  });
+    SignoutButton.click(function(){
+      firebase.auth().signOut();
+      window.location.href = 'index.html';
+    });
 
-  function valid(file){
-    if(file.length === 0){
-      return false;
+    function valid(file){
+      if(file.length === 0){
+        return false;
+      }
+      return !allFiles.includes(file);
     }
-    return !allFiles.includes(file);
-  }
 
-  function getAllFiles(){
-    var a = "";
-    allFiles.forEach(function(elem){
-      if(elem !== ''){
-        a+=elem+"||";
-      }
+    function getAllFiles(){
+      var a = "";
+      allFiles.forEach(function(elem){
+        if(elem !== ''){
+          a+=elem+"||";
+        }
+      });
+      return a;
+    }
+
+  
+    
+
+    // When the user clicks the button, open the modal
+    btn.onclick = function() {
+      console.log("button clicked");
+      modal.style.display = "block";
+    }
+
+    // When the user clicks on <span> (x), close the modal
+    span.click(function() {
+      modal.style.display = "none";
     });
-    return a;
-  }
 
-</script>
+    add.click(function() {
+      modal.style.display = "none";
+        
+    });
+
+    // When the user clicks anywhere outside of the modal, close it
+    window.onclick = function(event) {
+      if (event.target == modal) {
+          modal.style.display = "none";
+      }
+    }
+  </script>
+
+
