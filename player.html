@@ -63,7 +63,24 @@
     
 </div>
 
-<div class="li" style="margin-top:80px;float:left;width:100%">
+<div class="menu">
+  <button id="newFile" onclick=createFile()>New File</button>
+</div>
+
+<div id="myModal" class="modal">
+    <div class="modal-content">
+      <span class="close">×</span>
+      <input type="file" name="myfile" accept="audio/mp3" id="fileChooser" style="margin-bottom:5px;"></input>
+      <br>
+      <input id="fileName" placeholder="File name" type="text" style="margin-bottom:5px;">
+    <button id="uploadButton" style="margin-bottom:5px;">Upload</button>
+    <p id="fae">Invalid File name or a File with this name already exists.</p>
+    <br>
+    <progress value="0" max="100" id="uploader">0%</progress>
+    </div>
+  </div>
+
+<div class="li" style="float:left;width:100%">
   <ul id="listOfFiles"></ul>
 </div>
 
@@ -84,6 +101,7 @@
     var userId;
     var SignoutButton = $("#SignoutButton");
     var allFiles = [];
+    var uploading = false;
 
     // Get the modal
     var modal = document.getElementById('myModal');
@@ -93,6 +111,62 @@
 
     var audio = document.getElementById('audio');
     var source = document.getElementById('mp3Source');
+
+
+    var fileButton = $("#fileChooser");
+    var fileInput = $("#fileName");
+    var uploadButton = $("#uploadButton");
+    var uploader = $("#uploader");
+    var fae = $("#fae");
+    fae.hide();
+
+    fileButton.change(function(e){
+      var file = e.target.files[e.target.files.length-1];
+      fileInput.val(file.name.replace(".mp3", "").trim());
+      uploadButton.click(function(){
+        fae.hide();
+        if(valid(fileInput.val().trim())){
+          uploading = true;
+          var storageRef = firebase.storage().ref(userId+"/"+ fileInput.val().trim());
+          var task = storageRef.put(file);
+          task.on('state_changed', function progress(snapshot){
+            var percentage = (snapshot.bytesTransferred/snapshot.totalBytes)*100;
+            uploader.val(percentage);
+          },
+          function error(err){
+
+          },
+          function complete(){
+            allFiles.push(fileInput.val().trim());
+            var adaNameRef = firebase.database().ref('users/' + userId + '');
+            adaNameRef.child('allFiles').set(getAllFiles());
+            uploader.val(0);
+            fileButton.val(null);
+            storageRef.getDownloadURL().then(function(url) {
+              var adaNameRef = firebase.database().ref('users/' + userId + '/audioFiles/'+fileInput.val());
+              adaNameRef.child('audioURL').set(url);
+              fileInput.val("");
+              modal.style.display = "none";
+              loadListView();
+              uploading = false;
+            });
+          });
+        }
+        else
+        {
+          fae.show();
+        }
+      });
+    });
+
+
+    function valid(file){
+      if(file.length === 0){
+        return false;
+      }
+      return !allFiles.includes(file);
+    }
+
     
     SignoutButton.click(function(){
       firebase.auth().signOut();
@@ -165,6 +239,7 @@
     function playAudio(id){
       $(".li").hide();
       $(".searchBar").hide();
+      $(".menu").hide();
       $("#backButton").show();
       $(".player").show();
       $("#title").text(id);
@@ -183,13 +258,13 @@
     function goBack(){
       $(".li").show();
       $(".searchBar").show();
+      $(".menu").show();
       $("#backButton").hide();
       $(".player").hide();
       audio.pause();
     }
-    // When the user clicks the button, open the modal
-    /*btn.onclick = function() {
-      console.log("button clicked");
+
+    function createFile(){
       modal.style.display = "block";
     }
 
@@ -198,17 +273,13 @@
       modal.style.display = "none";
     });
 
-    add.click(function() {
-      modal.style.display = "none";
-        
-    });
-
     // When the user clicks anywhere outside of the modal, close it
     window.onclick = function(event) {
-      if (event.target == modal) {
+      if (event.target == modal && !uploadings) {
+          console.log("came in here as well");
           modal.style.display = "none";
       }
-    }*/
+    }
   </script>
 
 
