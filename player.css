@@ -52,19 +52,6 @@ button{
 	margin-right: 10px;
 }
 
-#searchButton{
-	width: 13%;
-	min-width: 125px;
-	color: #5992DC;
-	border:2px solid #6EBDB7;
-	border-radius: 50px;
-	font-size: 22px;
-	background-color: #fff;
-	margin-right: 5px;
-	margin-left: 10px;
-	margin-top: 5px;
-}
-
 #search{
 	width:25%;
 	min-width: 300px;
