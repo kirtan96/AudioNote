@@ -1,12 +1,7 @@
-option{
-	border:1.5px solid #5992DC;
-	padding: 3px;
-	white-space: pre-wrap;
-}
-
 h1{
 	text-align: center;
 	color: #6EBDB7;
+	margin-top: 5px;
 }
 
 body{
@@ -15,27 +10,41 @@ body{
 }
 
 button{
+	cursor: pointer;
+}
+
+#SignoutButton{
+	float: right;
+	width: 13%;
+	min-width: 125px;
+	color: #E27573;
 	border:2px solid #6EBDB7;
 	border-radius: 50px;
 	font-size: 22px;
 	display: block;
 	margin: 0 auto;
-	color: #5992DC;
 	background-color: #fff;
 	margin-top: 10px;
+	margin-right: 5px;
 }
 
-#SignoutButton{
-	float: right;
-	vertical-align: top;
-	width: 13%;
-	min-width: 125px;
+#backButton{
+	cursor: pointer;
+	float: left;
+	width: 8%;
+	min-width: 50px;
 	color: #E27573;
+	border:2px solid #6EBDB7;
+	border-radius: 50px;
+	font-size: 22px;
+	display: block;
+	margin: 0 auto;
+	background-color: #fff;
+	margin-top: 10px;
+	margin-left: 10px;
 }
 
 #welcome{
-	display: block;
-	color: black;
 	font-family: Arial, sans-serif;
 	font-size: 20px;
 	color: #5992DC;
@@ -43,92 +52,48 @@ button{
 	margin-right: 10px;
 }
 
-#uploadButton{
-	width: 10%;
-	min-width: 75px;
-	font-size: 16px;
-}
-
-#uploader{
-	margin-bottom: 10px;
-	width: 25%;
-	min-width: 200px;
-}
-
-#fileName{
+#searchButton{
+	width: 13%;
+	min-width: 125px;
+	color: #5992DC;
 	border:2px solid #6EBDB7;
-	display: block;
-	width: 20%;
-	min-width: 200px;
-	max-height: 30px;
-	height: 30px;
-	margin-top: 0px;
-	margin-bottom: 10px;
-	font-size: 18px;
-	border-radius: 5px;
-}
-
-
-#choose, #uploadButton, #fileName, #fae{
-	display: inline-block;
-}
-
-#fae{
-	color: red;
-	font-family: Arial, sans-serif;
-	display: none;
-}
-
-#selects{
-	float: left;
-	border:2px solid #6EBDB7;
-	margin-top: 15px;
-	height: 30%;
-	width: 30%;
-	min-width: 250px;
-	font-size: 20px;
-}
-
-#audio{
-	width: 100%;
-	min-width: 250px;
-	float: right;
-	margin-top: 20px;
-	right: 5px;
-}
-
-#notes{
-	border:2px solid #6EBDB7;
-	font-size: 20px;
-	border-radius: 5px;
-	width: 100%;
-	min-width: 250px;
-	float: right;
-	margin-top: 20px;
-	right: 5px;
-}
-
-.notes{
-	display: inline-block;
-	width: 60%;
-	min-width: 400px;
-	margin-left: 50px; 
-}
-
-#addButton, #editNoteButton, #deleteNoteButton{
-	display: inline-block;
-	border:2px solid #6EBDB7;
-	font-size: 18px;
-	border-radius: 5px;
-	float: right;
-	margin-top: 20px;
+	border-radius: 50px;
+	font-size: 22px;
+	background-color: #fff;
 	margin-right: 5px;
-	width: 10%;
-	min-width: 75px;
-	max-height: 30px;
-	height: 30px;
+	margin-top: 5px;
 }
 
+#search{
+	width:25%;
+	min-width: 300px;
+	margin-top: 100px;
+	font-size: 22px;
+	border:2px solid #6EBDB7;
+	border-radius: 5px;
+}
+
+img{
+	width:150px;
+	height:150px;
+	border-radius: 30px;
+	background-color: #f3f3f3;
+}
+
+li{
+	cursor:pointer;
+}
+
+#list{
+	width:180px;
+	float:left;
+	margin:10px;
+}
+
+#center{
+	margin-top:190px;
+	color:black;
+}
 
 /*modal*/
 .modal {
@@ -163,8 +128,41 @@ button{
     font-weight: bold;
 }
 
+* {
+  margin: 0;
+  padding: 0;
+}
+
+.li {
+  width: 900px;
+  margin: 0 auto;
+  overflow: auto;
+}
+
+ul {
+  list-style-type: none;
+}
+
+li img {
+  float: left;
+  margin: 10px;
+  border: 5px solid #fff;
+
+  -webkit-transition: box-shadow 0.5s ease;
+  -moz-transition: box-shadow 0.5s ease;
+  -o-transition: box-shadow 0.5s ease;
+  -ms-transition: box-shadow 0.5s ease;
+  transition: box-shadow 0.5s ease;
+}
+
+li img:hover {
+  -webkit-box-shadow: 0px 0px 7px rgba(255,255,255,0.9);
+  box-shadow: 0px 0px 7px rgba(255,255,255,0.9);
+}
+
 .close:hover,
 .close:focus {
     color: #000;
     text-decoration: none;
     cursor: pointer;
+}
