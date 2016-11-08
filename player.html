@@ -56,11 +56,7 @@
 <body>
 
 <div class="searchBar">
-  
-    <input id="search" style="margin-left:10px;" placeholder="Search" onkeyup=liveSearch()>
-    <button id="searchButton">Search</button>
-    <input type="checkbox" id="checkbox"> Live Search</input>
-    
+  <input id="search" style="margin-left:10px;" placeholder="Search" onkeyup=liveSearch()>
 </div>
 
 <div class="menu">
@@ -193,17 +189,6 @@
     $("#file").click(function(){
       console.log($("#file").val());
     });
-    
-    $("#searchButton").click(function(){
-      var s = $("#search").val();
-      if(s.trim()!==''){
-        searchForFile(s);
-      }
-      else{
-        $("#listOfFiles").empty();
-        loadListView();
-      }
-    });
 
     function searchForFile(file){
       $("#listOfFiles").empty();
@@ -216,14 +201,11 @@
 
     function liveSearch(){
       var s = $("#search").val();
-      if(document.getElementById("checkbox").checked)
-      {
-        if(s.trim()!==''){
-          searchForFile(s);
-        }
-        else{
-          loadListView();
-        }
+      if(s.trim()!==''){
+        searchForFile(s);
+      }
+      else{
+        loadListView();
       }
     }
 
