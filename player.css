@@ -32,7 +32,7 @@ button{
 	cursor: pointer;
 	float: left;
 	width: 8%;
-	min-width: 50px;
+	min-width: 70px;
 	color: #E27573;
 	border:2px solid #6EBDB7;
 	border-radius: 50px;
@@ -61,6 +61,7 @@ button{
 	font-size: 22px;
 	background-color: #fff;
 	margin-right: 5px;
+	margin-left: 10px;
 	margin-top: 5px;
 }
 
@@ -68,9 +69,23 @@ button{
 	width:25%;
 	min-width: 300px;
 	margin-top: 100px;
+	margin-left: 10px;
 	font-size: 22px;
 	border:2px solid #6EBDB7;
 	border-radius: 5px;
+}
+
+#newFile{
+	width: 13%;
+	min-width: 125px;
+	color: #5992DC;
+	border:2px solid #6EBDB7;
+	border-radius: 50px;
+	font-size: 22px;
+	background-color: #fff;
+	margin-right: 5px;
+	margin-left: 10px;
+	margin-top: 15px;
 }
 
 img{
@@ -93,6 +108,29 @@ li{
 #center{
 	margin-top:190px;
 	color:black;
+}
+
+#fileName{
+	width:20%;
+	min-width: 200px;
+	font-size: 20px;
+	border:2px solid #6EBDB7;
+	border-radius: 5px;
+}
+
+#uploadButton{
+	width: 13%;
+	min-width: 125px;
+	color: #5992DC;
+	border:2px solid #6EBDB7;
+	border-radius: 50px;
+	font-size: 18px;
+	background-color: #fff;
+	margin-left: 10px;
+}
+
+#fae{
+	color: red;
 }
 
 /*modal*/
@@ -136,7 +174,7 @@ li{
 .li {
   width: 900px;
   margin: 0 auto;
-  overflow: auto;
+  overflow: auto left;
 }
 
 ul {
