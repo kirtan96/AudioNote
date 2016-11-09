@@ -52,6 +52,19 @@ button{
 	margin-right: 10px;
 }
 
+#searchButton{
+	width: 13%;
+	min-width: 125px;
+	color: #5992DC;
+	border:2px solid #6EBDB7;
+	border-radius: 50px;
+	font-size: 22px;
+	background-color: #fff;
+	margin-right: 5px;
+	margin-left: 10px;
+	margin-top: 5px;
+}
+
 #search{
 	width:25%;
 	min-width: 300px;
@@ -62,7 +75,7 @@ button{
 	border-radius: 5px;
 }
 
-#newFile{
+#newFile, #deleteFile{
 	width: 13%;
 	min-width: 125px;
 	color: #5992DC;
@@ -105,7 +118,7 @@ li{
 	border-radius: 5px;
 }
 
-#uploadButton{
+#uploadButton, #deleteButton, #yes, #no{
 	width: 13%;
 	min-width: 125px;
 	color: #5992DC;
@@ -159,9 +172,7 @@ li{
 }
 
 .li {
-  width: 900px;
-  margin: 0 auto;
-  overflow: auto left;
+  width: 90%;
 }
 
 ul {
@@ -172,16 +183,9 @@ li img {
   float: left;
   margin: 10px;
   border: 5px solid #fff;
-
-  -webkit-transition: box-shadow 0.5s ease;
-  -moz-transition: box-shadow 0.5s ease;
-  -o-transition: box-shadow 0.5s ease;
-  -ms-transition: box-shadow 0.5s ease;
-  transition: box-shadow 0.5s ease;
 }
 
 li img:hover {
-  -webkit-box-shadow: 0px 0px 7px rgba(255,255,255,0.9);
   box-shadow: 0px 0px 7px rgba(255,255,255,0.9);
 }
 
