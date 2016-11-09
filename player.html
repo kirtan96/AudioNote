@@ -61,22 +61,38 @@
 
 <div class="menu">
   <button id="newFile" onclick=createFile()>New File</button>
+  <button id="deleteFile" style="color:red;" onclick=deleteFile()>Delete File</button>
 </div>
 
 <div id="myModal" class="modal">
-    <div class="modal-content">
-      <span class="close">×</span>
-      <input type="file" name="myfile" accept="audio/mp3" id="fileChooser" style="margin-bottom:5px;"></input>
-      <br>
-      <input id="fileName" placeholder="File name" type="text" style="margin-bottom:5px;">
+  <div class="modal-content">
+    <span class="close">×</span>
+    <input type="file" name="myfile" accept="audio/mp3" id="fileChooser" style="margin-bottom:5px;"></input>
+    <br>
+    <input id="fileName" placeholder="File name" type="text" style="margin-bottom:5px;">
     <button id="uploadButton" style="margin-bottom:5px;">Upload</button>
     <p id="fae">Invalid File name or a File with this name already exists.</p>
     <br>
     <progress value="0" max="100" id="uploader">0%</progress>
-    </div>
   </div>
+</div>
 
-<div class="li" style="float:left;width:100%">
+<div id="deleteModal" class="modal">
+  <div class="modal-content">
+    <span class="close">×</span>
+    <select id="selector" style="width:25%;min-width:150px;"></select>
+    <button id="deleteButton" style="color:red;" onclick=deleteAlert()>Delete</button>
+    <center>
+      <div id="confirmation">
+        <h4 id="confText" style="margin-top:15px;margin-bottom:5px;">Are you sure?</h4>
+        <button id="yes">Yes</button>
+        <button id="no">No</button>
+      </div>
+    </center>
+  </div>
+</div>
+
+<div class="li">
   <ul id="listOfFiles"></ul>
 </div>
 
@@ -101,6 +117,7 @@
 
     // Get the modal
     var modal = document.getElementById('myModal');
+    var deleteModal = document.getElementById('deleteModal');
     var span = $(".close");
 
     var database = firebase.database();
@@ -133,19 +150,22 @@
 
           },
           function complete(){
-            allFiles.push(fileInput.val().trim());
-            var adaNameRef = firebase.database().ref('users/' + userId + '');
-            adaNameRef.child('allFiles').set(getAllFiles());
-            uploader.val(0);
-            fileButton.val(null);
-            storageRef.getDownloadURL().then(function(url) {
-              var adaNameRef = firebase.database().ref('users/' + userId + '/audioFiles/'+fileInput.val());
-              adaNameRef.child('audioURL').set(url);
-              fileInput.val("");
-              modal.style.display = "none";
-              loadListView();
-              uploading = false;
-            });
+            if(valid(fileInput.val().trim()))
+            {
+              allFiles.push(fileInput.val().trim());
+              var adaNameRef = firebase.database().ref('users/' + userId + '');
+              adaNameRef.child('allFiles').set(getAllFiles());
+              uploader.val(0);
+              fileButton.val(null);
+              storageRef.getDownloadURL().then(function(url) {
+                var nameRef = firebase.database().ref('users/' + userId + '/audioFiles/'+fileInput.val());
+                nameRef.child('audioURL').set(url);
+                fileInput.val("");
+                modal.style.display = "none";
+                loadListView();
+                uploading = false;
+              });
+            }
           });
         }
         else
@@ -250,17 +270,73 @@
       modal.style.display = "block";
     }
 
+    function deleteFile(){
+      deleteModal.style.display = "block";
+      $("#confirmation").hide();
+      $("#selector").empty();
+      allFiles.forEach(function(elem){
+        if(elem!==''){
+          var opt = document.createElement('option');
+          opt.text = elem;
+          document.getElementById("selector").appendChild(opt);
+        }
+      });
+    }
+
+    function deleteAlert(){
+      var i = document.getElementById("selector").selectedIndex;
+      var temp = allFiles[i];
+      if(temp!= undefined){
+        $("#confirmation").show();
+        
+        $("#confText").text(temp + " will be deleted. Are you sure?");
+        $("#no").click(function(){
+          $("#confirmation").hide();
+        });
+        $("#yes").click(function(){
+          var storage = firebase.storage();
+          var storageRef = storage.ref();
+          var desertRef = storageRef.child(userId + '/' + temp);
+          desertRef.delete().then(function() {
+            console.log("delete successful");
+            allFiles = remove(temp);
+            loadListView();
+            var adaNameRef = firebase.database().ref('users/' + userId + '');
+            adaNameRef.child('allFiles').set(getAllFiles());
+            firebase.database().ref('users/' + userId + "/audioFiles/" + temp).remove();
+            deleteModal.style.display = "none";
+          }).catch(function(error) {
+            console.log("Uh-oh, an error occurred: " + error);
+          });
+        });
+      }
+    }
+
+    function remove(x){
+      var a = [];
+      allFiles.forEach(function(elem){
+        if(elem!== '' && elem!==x){
+          a.push(elem);
+        }
+      });
+      return a;
+    }
+
     // When the user clicks on <span> (x), close the modal
     span.click(function() {
       modal.style.display = "none";
+      deleteModal.style.display = "none";
     });
 
     // When the user clicks anywhere outside of the modal, close it
     window.onclick = function(event) {
-      if (event.target == modal && !uploadings) {
-          console.log("came in here as well");
-          modal.style.display = "none";
+      if (event.target == modal || event.target==deleteModal) {
+          if(!uploading){
+            modal.style.display = "none";
+          }
+          deleteModal.style.display = "none";
       }
+
     }
   </script>
 
