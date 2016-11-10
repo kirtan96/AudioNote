@@ -99,10 +99,17 @@
 <div class="player" style="margin-top:100px;">
   <center>
     <h1 id="title" style="color:#5992DC;margin-bottom:10px;"></h1>
-    <audio id="audio" style="width:75%;min-width:300px;" controls>
+    <audio id="audio" style="width:75%;min-width:300px;margin-bottom:10px;" controls>
       <source id="mp3Source" type="audio/mp3" src=""></source>
     </audio>
   </center>
+  <ul id="noteList" style="width: 80%; height: 365px; overflow: auto; margin:5px auto;border:2px solid #5992DC;border-radius:10px;">
+  </ul>
+  <div class="noteAdder">
+    <p class="time" id="timer" style="margin-bottom:10px;display:inline-block;vertical-align: middle;"></p>
+    <textarea id="noteInput" onkeyup=pauseAudio()></textarea>
+    <button id="addNote" onclick=addNote()>Add</button>
+  </div>
 </div>
 </body>
 
@@ -113,6 +120,7 @@
     var userId;
     var SignoutButton = $("#SignoutButton");
     var allFiles = [];
+    var map = {};
     var uploading = false;
 
     // Get the modal
@@ -245,15 +253,23 @@
       $("#backButton").show();
       $(".player").show();
       $("#title").text(id);
+      map={};
+      $("#noteList").empty();
       setAudio(id);
     }
 
     function setAudio(id){
       firebase.database().ref('/users/' + userId + '/audioFiles/'+id).once('value').then(function(snapshot) {
           var url = snapshot.val().audioURL;
+          var ns = snapshot.val().notes;
+          if(ns!==undefined){
+            getNotesFromDB(ns);
+            loadNoteListView();
+          }
           source.src=url;
           audio.load(); //call this to just preload the audio without playing
           audio.play();
+
       });
     }
 
@@ -264,6 +280,7 @@
       $("#backButton").hide();
       $(".player").hide();
       audio.pause();
+      map = {};
     }
 
     function createFile(){
@@ -311,6 +328,76 @@
         });
       }
     }
+
+    function addNote(){
+      var s = $("#noteInput").val().trim();
+      if(s !== ''){
+        if(map[$("#timer").text()]==undefined){
+          map[$("#timer").text()] = s;
+        }
+        else{
+          map[$("#timer").text()] = map[$("#timer").text()] + "\n" +  s;
+        }
+        loadNoteListView();
+        var nameRef = firebase.database().ref('users/' + userId + '/audioFiles/'+ $("#title").text());
+        nameRef.child('notes').set(getAllNotes());
+        $("#noteInput").val("");
+        $("#timer").text("");
+        audio.play();
+      }
+    }
+
+    function getAllNotes(){
+      var x = "";
+      for(var key in map){
+        if(key!==""){
+          x += key + "|||" + map[key] + "|||||";
+        }
+      }
+      return x;
+    }
+
+    function getNotesFromDB(id){
+      var a = id.split("|||||");
+      for(var n in a){
+        if(a[n]!== ''){
+          var z = a[n].split("|||");
+          map[z[0]] = z[1];
+        }
+      }
+    }
+
+    function loadNoteListView(){
+      $("#noteList").empty();
+      for(var key in map){
+        if(key!==''){
+          $("#noteList").append("<li><div class='notes'><p class='time'>" + key + "</p><p class='note'>" + map[key] + "</p></div></li>");
+        }
+      }
+    }   
+
+    function pauseAudio(){
+      if($("#noteInput").val() !== ""){
+        audio.pause();
+        var time = audio.currentTime;
+        var min = (time/60)|0;
+        var sec = (time%60)|0;
+        var m = min + "";
+        var s = sec + "";
+        if(min < 10){
+          m = "0" + m;
+        }
+        if(sec < 10){
+          s = "0" + s;
+        }
+        $("#timer").text(m + ":" + s);
+      }
+      else
+      {
+        audio.play();
+        $("#timer").text("");
+      }
+    } 
 
     function remove(x){
       var a = [];
