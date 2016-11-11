@@ -56,7 +56,8 @@
 <body>
 
 <div class="searchBar">
-  <input id="search" style="margin-left:10px;" placeholder="Search" onkeyup=liveSearch()>
+  <input id="search" style="margin-left:10px;display:inline-block;" placeholder="Search" onkeyup=liveSearch()>
+  <p id="noResultFound" style="margin:10px;color:red;display:inline-block;">No Result Found</p>
 </div>
 
 <div class="menu">
@@ -106,7 +107,7 @@
   <ul id="noteList" style="width: 80%; height: 365px; overflow: auto; margin:5px auto;border:2px solid #5992DC;border-radius:10px;">
   </ul>
   <div class="noteAdder">
-    <p class="time" id="timer" style="margin-bottom:10px;display:inline-block;vertical-align: middle;"></p>
+    <p class="time" id="timer" style="padding:10px;width:50px;height:15px;margin-right:5px;display:inline-block;vertical-align: middle;text-align:center;"></p>
     <textarea id="noteInput" onkeyup=pauseAudio()></textarea>
     <button id="addNote" onclick=addNote()>Add</button>
   </div>
@@ -140,6 +141,7 @@
     var uploader = $("#uploader");
     var fae = $("#fae");
     fae.hide();
+    $("#noResultFound").hide();
 
     fileButton.change(function(e){
       var file = e.target.files[e.target.files.length-1];
@@ -220,19 +222,35 @@
 
     function searchForFile(file){
       $("#listOfFiles").empty();
-      allFiles.forEach(function(elem){
-        if(elem.includes(file)){
-          $("#listOfFiles").append("<li id='" + elem + "' onclick=playAudio(this.id)><div id='list'><a><img src='mp3.png' style='border:5px solid #6EBDB7;'/></a><center><h4 id='center'>" + elem + "</h4></center></div></li>");
-        }
-      });
+      $("#noResultFound").hide();
+      if(!file.includes("|")){
+        allFiles.forEach(function(elem){
+          var x = "";
+          firebase.database().ref('/users/' + userId + '/audioFiles/'+elem).once('value').then(function(snapshot) {
+            var ns = snapshot.val().notes;
+            if(ns!==undefined){
+              getNotesFromDB(ns);
+              x = getAllNotes();
+              if(elem.includes(file) || x.includes(file)){
+                $("#listOfFiles").append("<li id='" + elem + "' onclick=playAudio(this.id)><div id='list'><a><img src='mp3.png' style='border:5px solid #6EBDB7;'/></a><center><h4 id='center'>" + elem + "</h4></center></div></li>");
+              }
+            }
+          });
+        });
+      }
+      else{
+        $("#noResultFound").hide();
+      }
     }
 
     function liveSearch(){
       var s = $("#search").val();
       if(s.trim()!==''){
+        $("#noResultFound").hide();
         searchForFile(s);
       }
       else{
+        $("#noResultFound").hide();
         loadListView();
       }
     }
@@ -358,6 +376,7 @@
     }
 
     function getNotesFromDB(id){
+      map = {};
       var a = id.split("|||||");
       for(var n in a){
         if(a[n]!== ''){
@@ -369,12 +388,38 @@
 
     function loadNoteListView(){
       $("#noteList").empty();
+      sortMap();
       for(var key in map){
         if(key!==''){
-          $("#noteList").append("<li><div class='notes'><p class='time'>" + key + "</p><p class='note'>" + map[key] + "</p></div></li>");
+          $("#noteList").append("<li><div class='notes'><div style='display:inline-block;width:50px;height:100%;background-color:#5992DC;padding:10px;margin-right:5px;'><p id='" + key + "' onclick=goTo(this.id) class='time' style='cursor:pointer;'>" + key + "</p></div><p id='" + key + "' onclick=goTo(this.id) class='note' style='cursor:pointer;'>" + map[key] + "</p><button id='" + key + "' class='delete' onclick=deleteNote(this.id) style='float:right;'>Delete</button><button class='edit' style='float:right;'>Edit</button></div></li>");
         }
       }
-    }   
+    } 
+
+    function sortMap(){
+      var keys = Object.keys(map),i, len = keys.length;
+      keys.sort();
+      var x = {};
+      for (i = 0; i < len; i++) {
+        x[keys[i]] = map[keys[i]];
+      }
+      map = x;
+    }  
+
+    //id = 04:40
+    function goTo(id){
+      var elem = id.split(":");
+      var minute = Number(elem[0]) * 60;
+      var second = Number(elem[1]); 
+      audio.currentTime = minute + second;
+    }
+
+    function deleteNote(id){
+      delete map[id];
+      var nameRef = firebase.database().ref('users/' + userId + '/audioFiles/'+ $("#title").text());
+      nameRef.child('notes').set(getAllNotes());
+      loadNoteListView();
+    }
 
     function pauseAudio(){
       if($("#noteInput").val() !== ""){
