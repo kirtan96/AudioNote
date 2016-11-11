@@ -9,7 +9,7 @@ body{
 	font-family: sans serif;
 }
 
-button, li{
+button{
 	cursor: pointer;
 }
 
@@ -193,17 +193,19 @@ ul {
 }
 
 .time{
-	display:inline-block;
-	padding:5px;
-	width:50px;
-	margin-right: 5px;
 	background-color: #5992DC;
+	display:inline-block;
 	color: white;
 	text-align: center;
-	height: 100%;
+	vertical-align: middle;
 }
 .note{
 	display:inline-block;
+	width: 75%;
+    border: 0px solid #000000;
+	word-wrap: break-word;
+	font-size: 20px;
+	vertical-align: middle;
 }
 
 .notes{
@@ -222,6 +224,10 @@ ul {
 	background-color: #6EBDB7;
 	border:2px solid #6EBDB7;
 	border-radius: 10px;
+}
+
+#listOfFiles{
+	cursor: pointer;
 }
 
 #noteInput{
@@ -247,5 +253,27 @@ ul {
 	font-size: 20px;
 	background-color: white;
 	color:#5992DC;
+	vertical-align: middle;
+}
+
+.edit{
+	border:2px solid #6EBDB7;
+	width:50px;
+	border-radius: 10px;
+	font-size: 16px;
+	background-color: white;
+	color:#5992DC;
+	margin:5px;
+	vertical-align: middle;
+}
+
+.delete{
+	border:2px solid #6EBDB7;
+	width:70px;
+	border-radius: 10px;
+	font-size: 16px;
+	background-color: white;
+	color:red;
+	margin:5px;
 	vertical-align: middle;
 }
