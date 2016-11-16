@@ -277,3 +277,28 @@ ul {
 	margin:5px;
 	vertical-align: middle;
 }
+
+#editor{
+	display: inline-block;
+	height:45px;
+	max-height: 45px;
+	width:500px;
+	min-width:100%;
+	max-width: 100%;
+	border:2px solid #6EBDB7;
+	border-radius: 5px;
+	font-size: 20px;
+	margin-top: 10px;
+	margin-right: 5px;
+}
+
+#edit, #cancel{
+	display: inline-block;
+	border:2px solid #6EBDB7;
+	width:50px;
+	border-radius: 10px;
+	font-size: 20px;
+	background-color: white;
+	color:#5992DC;
+	vertical-align: middle;
+}
