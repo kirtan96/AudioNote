@@ -5,30 +5,31 @@ var config = {
       storageBucket: "audio-note-pro.appspot.com",
       messagingSenderId: "1014839766664"
     };
-    firebase.initializeApp(config);
+firebase.initializeApp(config);
 
-    firebase.auth().onAuthStateChanged(u => {
-      if (u) {
-        user = u;
-        userId = u.uid;
-        firebase.database().ref('/users/' + userId).once('value').then(function(snapshot) {
-          var name = snapshot.val().name;
-          if(snapshot.val().allFiles){
-            var files = snapshot.val().allFiles;
-            allFiles = files.split("||");
-          }
-          $("#listOfFiles").empty();
-          $("#welcome").text(name);
-          allFiles.forEach(function(elem){
-            if(elem!==''){
-              $("#listOfFiles").append("<li id='" + elem + "' onclick=playAudio(this.id)><div id='list'><a><img src='mp3.png' style='border:5px solid #6EBDB7;'/></a><center><h4 id='center'>" + elem + "</h4></center></div></li>");
-            }
-          });
-        });
-      } else {
-        window.location.href = 'index.html';
+firebase.auth().onAuthStateChanged(u => {
+  if (u) {
+    user = u;
+    userId = u.uid;
+    firebase.database().ref('/users/' + userId).once('value').then(function(snapshot) {
+      var name = snapshot.val().name;
+      if(snapshot.val().allFiles){
+        var files = snapshot.val().allFiles;
+        allFiles = files.split("||");
       }
+      $("#listOfFiles").empty();
+      $("#welcome").text(name);
+      allFiles.forEach(function(elem){
+        if(elem!==''){
+          $("#listOfFiles").append("<li id='" + elem + "' onclick=playAudio(this.id)><div id='list'><a><img src='mp3.png' style='border:5px solid #6EBDB7;'/></a><center><h4 id='center'>" + elem + "</h4></center></div></li>");
+        }
+      });
+      $(".loader").hide();
     });
+  } else {
+    window.location.href = 'index.html';
+  }
+});
 
 $("#backButton").hide();
 $(".player").hide();
