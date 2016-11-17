@@ -133,10 +133,6 @@ function getAllFiles(){
   return a;
 }
 
-$("#file").click(function(){
-  console.log($("#file").val());
-});
-
 function searchForFile(file){
   $("#listOfFiles").empty();
   $("#noResultFound").hide();
@@ -144,7 +140,7 @@ function searchForFile(file){
     allFiles.forEach(function(elem){
       var x = "";
       firebase.database().ref('/users/' + userId + '/audioFiles/'+elem).once('value').then(function(snapshot) {
-        var ns = snapshot.val().notes;
+        var ns = snapshot.val().notes.toLowerCase();
         if(ns!==undefined){
           getNotesFromDB(ns);
           x = getAllNotes();
@@ -161,8 +157,8 @@ function searchForFile(file){
 }
 
 function liveSearch(){
-  var s = $("#search").val();
-  if(s.trim()!==''){
+  var s = $("#search").val().toLowerCase().trim();
+  if(s !==''){
     $("#noResultFound").hide();
     searchForFile(s);
   }
@@ -174,11 +170,11 @@ function liveSearch(){
 
 function loadListView(){
   $("#listOfFiles").empty();
-      allFiles.forEach(function(elem){
-          if(elem!==''){
-            $("#listOfFiles").append("<li id='" + elem + "' onclick=playAudio(this.id)><div id='list'><a><img src='mp3.png' style='border:5px solid #6EBDB7;'/></a><center><h4 id='center'>" + elem + "</h4></center></div></li>");
-          }
-        });
+  allFiles.forEach(function(elem){
+      if(elem!==''){
+        $("#listOfFiles").append("<li id='" + elem + "' onclick=playAudio(this.id)><div id='list'><a><img src='mp3.png' style='border:5px solid #6EBDB7;'/></a><center><h4 id='center'>" + elem + "</h4></center></div></li>");
+      }
+    });
 }
 
 function playAudio(id){
