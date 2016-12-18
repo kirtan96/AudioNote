@@ -21,7 +21,8 @@ firebase.auth().onAuthStateChanged(u => {
       $("#welcome").text(name);
       allFiles.forEach(function(elem){
         if(elem!==''){
-          $("#listOfFiles").append("<li id='" + elem + "' onclick=playAudio(this.id)><div id='list'><a><img src='mp3.png' style='border:5px solid #6EBDB7;'/></a><center><h4 id='center'>" + elem + "</h4></center></div></li>");
+          //$("#listOfFiles").append("<li id='" + elem + "' onclick=playAudio(this.id)><div id='list'><a><img src='mp3.png'/></a><h4 id='center'>" + elem + "</h4></div></li>");
+          $('#table').append( "<tr><td id='" + elem + "' onclick=playAudio(this.id)><a><img src='mp3.png' /></a><h4 id='center'>" + elem + "</h4></td><td>December 8 2016</td><td>Yes</td></tr>" );
         }
       });
       $(".loader").hide();
@@ -134,7 +135,7 @@ function getAllFiles(){
 }
 
 function searchForFile(file){
-  $("#listOfFiles").empty();
+  $("#table").find("tr:gt(0)").remove();
   $("#noResultFound").hide();
   if(!file.includes("|")){
     allFiles.forEach(function(elem){
@@ -145,7 +146,8 @@ function searchForFile(file){
           getNotesFromDB(ns);
           x = getAllNotes();
           if(elem.includes(file) || x.includes(file)){
-            $("#listOfFiles").append("<li id='" + elem + "' onclick=playAudio(this.id)><div id='list'><a><img src='mp3.png' style='border:5px solid #6EBDB7;'/></a><center><h4 id='center'>" + elem + "</h4></center></div></li>");
+            //$("#listOfFiles").append("<li id='" + elem + "' onclick=playAudio(this.id)><div id='list'><a><img src='mp3.png' style='border:5px solid #6EBDB7;'/></a><center><h4 id='center'>" + elem + "</h4></center></div></li>");
+            $('#table').append( "<tr><td id='" + elem + "' onclick=playAudio(this.id)><a><img src='mp3.png' /></a><h4 id='center'>" + elem + "</h4></td><td>December 8 2016</td><td>Yes</td></tr>" );
           }
         }
       });
@@ -169,10 +171,11 @@ function liveSearch(){
 }
 
 function loadListView(){
-  $("#listOfFiles").empty();
+  $("#table").find("tr:gt(0)").remove();
   allFiles.forEach(function(elem){
       if(elem!==''){
-        $("#listOfFiles").append("<li id='" + elem + "' onclick=playAudio(this.id)><div id='list'><a><img src='mp3.png' style='border:5px solid #6EBDB7;'/></a><center><h4 id='center'>" + elem + "</h4></center></div></li>");
+        //$("#listOfFiles").append("<li id='" + elem + "' onclick=playAudio(this.id)><div id='list'><a><img src='mp3.png' style='border:5px solid #6EBDB7;'/></a><center><h4 id='center'>" + elem + "</h4></center></div></li>");
+        $('#table').append( "<tr><td id='" + elem + "' onclick=playAudio(this.id)><a><img src='mp3.png' /></a><h4 id='center'>" + elem + "</h4></td><td>December 8 2016</td><td>Yes</td></tr>" );
       }
     });
 }
@@ -184,6 +187,8 @@ function playAudio(id){
   $("#backButton").show();
   $(".player").show();
   $("#title").text(id);
+  $("#head").hide();
+  $(".mainpage").hide();
   map={};
   $("#noteList").empty();
   setAudio(id);
@@ -210,6 +215,8 @@ function goBack(){
   $(".menu").show();
   $("#backButton").hide();
   $(".player").hide();
+  $("#head").show();
+  $(".mainpage").show();
   audio.pause();
   map = {};
 }
@@ -304,7 +311,7 @@ function loadNoteListView(){
   sortMap();
   for(var key in map){
     if(key!==''){
-      $("#noteList").append("<li><div class='notes'><div style='display:inline-block;width:50px;height:100%;background-color:#5992DC;padding:10px;margin-right:5px;'><p id='" + key + "' onclick=goTo(this.id) class='time' style='cursor:pointer;'>" + key + "</p></div><p id='" + key + "' onclick=goTo(this.id) class='note' style='cursor:pointer;'>" + map[key] + "</p><button id='" + key + "' class='delete' onclick=deleteNote(this.id) style='float:right;'>Delete</button><button id='" + key + "' class='edit' style='float:right;' onclick=editNote(this.id)>Edit</button></div></li>");
+      $("#noteList").append("<li><div class='notes'><div style='display:inline-block;width:50px;height:100%;background-color:#5992DC;padding:10px;margin-right:5px;'><p id='" + key + "' onclick=goTo(this.id) class='time' style='cursor:pointer;'>" + key + "</p></div><p id='" + key + "' onclick=goTo(this.id) class='note' style='cursor:pointer;'>" + map[key] + "</p><button id='" + key + "' class='delete' onclick=deleteNote(this.id) style='float:right;'>Delete</button><button id='" + key + "' class='edit' style='float:right;vertical-align:middle;' onclick=editNote(this.id)>Edit</button></div></li>");
     }
   }
 } 
@@ -359,19 +366,23 @@ function cancelEdit(){
 
 function pauseAudio(){
   if($("#noteInput").val() !== ""){
-    audio.pause();
-    var time = audio.currentTime;
-    var min = (time/60)|0;
-    var sec = (time%60)|0;
-    var m = min + "";
-    var s = sec + "";
-    if(min < 10){
-      m = "0" + m;
+    if(!$("#continue").is(':checked')){
+      audio.pause();
     }
-    if(sec < 10){
-      s = "0" + s;
+    if($("#timer").text() === ""){
+      var time = audio.currentTime;
+      var min = (time/60)|0;
+      var sec = (time%60)|0;
+      var m = min + "";
+      var s = sec + "";
+      if(min < 10){
+        m = "0" + m;
+      }
+      if(sec < 10){
+        s = "0" + s;
+      }
+      $("#timer").text(m + ":" + s);
     }
-    $("#timer").text(m + ":" + s);
   }
   else
   {
