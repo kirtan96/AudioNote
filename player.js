@@ -17,12 +17,32 @@ firebase.auth().onAuthStateChanged(u => {
         var files = snapshot.val().allFiles;
         allFiles = files.split("||");
       }
-      $("#listOfFiles").empty();
+      if(snapshot.val().YTFiles){
+        var files = snapshot.val().YTFiles;
+        ytFiles = files.split("||");
+      }
+      if(snapshot.val().favorites){
+        var files = snapshot.val().favorites;
+        favorites = files.split("||");
+      }
+      $("#table").find("tr:gt(0)").remove();
       $("#welcome").text(name);
+      
       allFiles.forEach(function(elem){
         if(elem!==''){
-          //$("#listOfFiles").append("<li id='" + elem + "' onclick=playAudio(this.id)><div id='list'><a><img src='mp3.png'/></a><h4 id='center'>" + elem + "</h4></div></li>");
-          $('#table').append( "<tr><td id='" + elem + "' onclick=playAudio(this.id)><a><img src='mp3.png' /></a><h4 id='center'>" + elem + "</h4></td><td>December 8 2016</td><td>Yes</td></tr>" );
+          var img = "";
+          if(favorites.includes(elem)){img = fullStar;}else{img = emptyStar;}
+          counter = "star" + elem;
+          $('#table').append( "<tr><td id='" + elem + "' onclick=playAudio(this.id)><a><img src='mp3.png' /></a><h4 id='center'>" + elem + "</h4></td><td><img id='" + counter + "' style='height:25px;width:25px;' onclick=switchStar(this.id) src='" + img + "'></td></tr>" );
+        }
+      });
+      ytFiles.forEach(function(elem){
+        var z = elem + "fav";
+        if(elem!==''){
+          var img = "";
+          if(favorites.includes(elem)){img = fullStar;}else{img = emptyStar;}
+          var counter = "star" + elem;
+          $('#table').append( "<tr><td id='" + elem + "' onclick=playYT(this.id)><a><img src='ytlogo.png' style='height:25px;width:35px;margin:7px;'/></a><h4 id='center'>" + elem + "</h4></td><td><img id='" + counter + "' style='height:25px;width:25px;' onclick=switchStar(this.id) src='" + img + "'></td></tr>" );
         }
       });
       $(".loader").hide();
@@ -38,6 +58,9 @@ var user = firebase.auth().currentUser;
 var userId;
 var SignoutButton = $("#SignoutButton");
 var allFiles = [];
+var ytFiles = [];
+var favorites = [];
+var selector = [];
 var map = {};
 var uploading = false;
 
@@ -45,6 +68,7 @@ var uploading = false;
 var modal = document.getElementById('myModal');
 var deleteModal = document.getElementById('deleteModal');
 var editModal = document.getElementById('editModal');
+var ytModal = document.getElementById('ytModal');
 var span = $(".close");
 
 var database = firebase.database();
@@ -55,11 +79,18 @@ var source = document.getElementById('mp3Source');
 
 var fileButton = $("#fileChooser");
 var fileInput = $("#fileName");
+var ytFileName = $("#ytFileName");
 var uploadButton = $("#uploadButton");
 var uploader = $("#uploader");
+var createButton = $("#createButton");
 var fae = $("#fae");
+var ytLink = $("#ytLink");
 fae.hide();
 $("#noResultFound").hide();
+var loader = $(".loader");
+
+var emptyStar = "emptystar.png";
+var fullStar = "fullstar.png";
 
 fileButton.change(function(e){
   var file = e.target.files[e.target.files.length-1];
@@ -82,7 +113,7 @@ fileButton.change(function(e){
         {
           allFiles.push(fileInput.val().trim());
           var adaNameRef = firebase.database().ref('users/' + userId + '');
-          adaNameRef.child('allFiles').set(getAllFiles());
+          adaNameRef.child('allFiles').set(getFiles(allFiles));
           uploader.val(0);
           fileButton.val(null);
           storageRef.getDownloadURL().then(function(url) {
@@ -103,30 +134,75 @@ fileButton.change(function(e){
   });
 });
 
-
-function valid(file){
-  if(file.length === 0){
-    return false;
+function createYT(){
+  if(valid(ytFileName.val().trim()) && validLink(ytLink.val().trim())){
+    uploading = true;
+    ytFiles.push(ytFileName.val().trim());
+    var adaNameRef = firebase.database().ref('users/' + userId + '');
+    adaNameRef.child('YTFiles').set(getFiles(ytFiles));
+    var video_id = ytLink.val().trim().split('v=')[1];
+    var ampersandPosition = video_id.indexOf('&');
+    if(ampersandPosition != -1) {
+      video_id = video_id.substring(0, ampersandPosition);
+    }
+    var nameRef = firebase.database().ref('users/' + userId + '/youtubeFiles/'+ytFileName.val());
+    nameRef.child('id').set(video_id);
+    ytModal.style.display = "none";
+    loadListView();
+    uploading = false;
   }
-  return !allFiles.includes(file);
+  else{
+    console.log("Did not enter");
+  }
 }
 
+function valid(file){
+  console.log("Came here 1");
+  if(file.length === 0){
+    console.log("return false");
+    return false;
+  }
+  return !allFiles.includes(file) && !ytFiles.includes(file);
+}
+
+function validLink(url){
+  console.log("came here 2");
+  if (url != undefined || url != '') {
+      var regExp = /^.*(youtube.com\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*).*/;
+      var match = url.match(regExp);
+      if (match && match[2].length == 11) {
+        console.log("return true");
+        return true;
+      }
+      else {
+        console.log("return false");
+        return false;
+      }
+  }
+}
+
+function switchStar(id){
+  var x = id.replace("star", "");
+  if(document.getElementById(id).src.includes(emptyStar)){
+    document.getElementById(id).src = fullStar;
+    favorites.push(x);
+  }
+  else{
+    document.getElementById(id).src = emptyStar;
+    favorites = remove(x, favorites);
+  }
+  var adaNameRef = firebase.database().ref('users/' + userId + '');
+  adaNameRef.child('favorites').set(getFiles(favorites));
+}
 
 SignoutButton.click(function(){
   firebase.auth().signOut();
   window.location.href = 'index.html';
 });
 
-function valid(file){
-  if(file.length === 0){
-    return false;
-  }
-  return !allFiles.includes(file);
-}
-
-function getAllFiles(){
+function getFiles(arr){
   var a = "";
-  allFiles.forEach(function(elem){
+  arr.forEach(function(elem){
     if(elem !== ''){
       a+=elem+"||";
     }
@@ -134,23 +210,85 @@ function getAllFiles(){
   return a;
 }
 
+function liveSearch(){
+  $("#table").find("tr:gt(0)").remove();
+  loader.show();
+  delay(function(){
+    var s = $("#search").val().trim();
+    if(s !==''){
+      s = s.toLowerCase();
+      $("#noResultFound").hide();
+      loader.show();
+      searchForFile(s);
+      loader.hide();
+    }
+    else{
+      $("#noResultFound").hide();
+      loadListView();
+    }
+    }, 200 );
+  loader.hide();
+}
+
+var delay = (function(){
+  var timer = 0;
+  return function(callback, ms){
+    clearTimeout (timer);
+    timer = setTimeout(callback, ms);
+  };
+})();
+
 function searchForFile(file){
   $("#table").find("tr:gt(0)").remove();
   $("#noResultFound").hide();
   if(!file.includes("|")){
     allFiles.forEach(function(elem){
       var x = "";
-      firebase.database().ref('/users/' + userId + '/audioFiles/'+elem).once('value').then(function(snapshot) {
-        var ns = snapshot.val().notes.toLowerCase();
-        if(ns!==undefined){
-          getNotesFromDB(ns);
-          x = getAllNotes();
-          if(elem.includes(file) || x.includes(file)){
-            //$("#listOfFiles").append("<li id='" + elem + "' onclick=playAudio(this.id)><div id='list'><a><img src='mp3.png' style='border:5px solid #6EBDB7;'/></a><center><h4 id='center'>" + elem + "</h4></center></div></li>");
-            $('#table').append( "<tr><td id='" + elem + "' onclick=playAudio(this.id)><a><img src='mp3.png' /></a><h4 id='center'>" + elem + "</h4></td><td>December 8 2016</td><td>Yes</td></tr>" );
+      if(elem.toLowerCase().includes(file)){
+        var img = "";
+        if(favorites.includes(elem)){img = fullStar;}else{img = emptyStar;}
+        counter = "star" + elem;
+        $('#table').append( "<tr><td id='" + elem + "' onclick=playAudio(this.id)><a><img src='mp3.png' /></a><h4 id='center'>" + elem + "</h4></td><td><img id='" + counter + "' style='height:25px;width:25px;' onclick=switchStar(this.id) src='" + img + "'></td></tr>" );
+      }
+      else{
+        firebase.database().ref('/users/' + userId + '/audioFiles/'+elem).once('value').then(function(snapshot) {
+          var ns = snapshot.val().notes.toLowerCase();
+          if(ns!==undefined){
+            getNotesFromDB(ns);
+            x = getAllNotes().toLowerCase();
+            if(elem.toLowerCase().includes(file) || x.includes(file)){
+              var img = "";
+              if(favorites.includes(elem)){img = fullStar;}else{img = emptyStar;}
+              counter = "star" + elem;
+              $('#table').append( "<tr><td id='" + elem + "' onclick=playAudio(this.id)><a><img src='mp3.png' /></a><h4 id='center'>" + elem + "</h4></td><td><img id='" + counter + "' style='height:25px;width:25px;' onclick=switchStar(this.id) src='" + img + "'></td></tr>" );
+            }
           }
-        }
-      });
+        });
+      }
+    });
+    ytFiles.forEach(function(elem){
+      var x = "";
+      if(elem.toLowerCase().includes(file)){
+        var img = "";
+        if(favorites.includes(elem)){img = fullStar;}else{img = emptyStar;}
+        var counter = "star" + elem;
+        $('#table').append( "<tr><td id='" + elem + "' onclick=playYT(this.id)><a><img src='ytlogo.png' style='height:25px;width:35px;margin:7px;'/></a><h4 id='center'>" + elem + "</h4></td><td><img id='" + counter + "' style='height:25px;width:25px;' onclick=switchStar(this.id) src='" + img + "'></td></tr>" );
+      }
+      else{
+        firebase.database().ref('/users/' + userId + '/youtubeFiles/'+elem).once('value').then(function(snapshot) {
+          var ns = snapshot.val().notes.toLowerCase();
+          if(ns!==undefined){
+            getNotesFromDB(ns);
+            x = getYTNotes().toLowerCase();
+            if(elem.toLowerCase().includes(file) || x.includes(file)){
+              var img = "";
+              if(favorites.includes(elem)){img = fullStar;}else{img = emptyStar;}
+              var counter = "star" + elem;
+              $('#table').append( "<tr><td id='" + elem + "' onclick=playYT(this.id)><a><img src='ytlogo.png' style='height:25px;width:35px;margin:7px;'/></a><h4 id='center'>" + elem + "</h4></td><td><img id='" + counter + "' style='height:25px;width:25px;' onclick=switchStar(this.id) src='" + img + "'></td></tr>" );
+            }
+          }
+        });
+      }
     });
   }
   else{
@@ -158,26 +296,29 @@ function searchForFile(file){
   }
 }
 
-function liveSearch(){
-  var s = $("#search").val().toLowerCase().trim();
-  if(s !==''){
-    $("#noResultFound").hide();
-    searchForFile(s);
-  }
-  else{
-    $("#noResultFound").hide();
-    loadListView();
-  }
+function clearSearch(){
+  $("#search").val("");
+  loadListView();
 }
 
 function loadListView(){
   $("#table").find("tr:gt(0)").remove();
   allFiles.forEach(function(elem){
-      if(elem!==''){
-        //$("#listOfFiles").append("<li id='" + elem + "' onclick=playAudio(this.id)><div id='list'><a><img src='mp3.png' style='border:5px solid #6EBDB7;'/></a><center><h4 id='center'>" + elem + "</h4></center></div></li>");
-        $('#table').append( "<tr><td id='" + elem + "' onclick=playAudio(this.id)><a><img src='mp3.png' /></a><h4 id='center'>" + elem + "</h4></td><td>December 8 2016</td><td>Yes</td></tr>" );
-      }
-    });
+    if(elem!==''){
+      var img = "";
+      if(favorites.includes(elem)){img = fullStar;}else{img = emptyStar;}
+      counter = "star" + elem;
+      $('#table').append( "<tr><td id='" + elem + "' onclick=playAudio(this.id)><a><img src='mp3.png' /></a><h4 id='center'>" + elem + "</h4></td><td><img id='" + counter + "' style='height:25px;width:25px;' onclick=switchStar(this.id) src='" + img + "'></td></tr>" );
+    }
+  });
+  ytFiles.forEach(function(elem){
+    if(elem!==''){
+      var img = "";
+      if(favorites.includes(elem)){img = fullStar;}else{img = emptyStar;}
+      var counter = "star" + elem;
+      $('#table').append( "<tr><td id='" + elem + "' onclick=playYT(this.id)><a><img src='ytlogo.png' style='height:25px;width:35px;margin:7px;'/></a><h4 id='center'>" + elem + "</h4></td><td><img id='" + counter + "' style='height:25px;width:25px;' onclick=switchStar(this.id) src='" + img + "'></td></tr>" );
+    }
+  });
 }
 
 function playAudio(id){
@@ -205,7 +346,6 @@ function setAudio(id){
       source.src=url;
       audio.load(); //call this to just preload the audio without playing
       audio.play();
-
   });
 }
 
@@ -225,11 +365,25 @@ function createFile(){
   modal.style.display = "block";
 }
 
+function createYoutube(){
+  ytModal.style.display = "block";
+}
+
 function deleteFile(){
+  selector = [];
   deleteModal.style.display = "block";
   $("#confirmation").hide();
   $("#selector").empty();
   allFiles.forEach(function(elem){
+    if(elem!==''){
+      selector.push(elem);
+      var opt = document.createElement('option');
+      opt.text = elem;
+      document.getElementById("selector").appendChild(opt);
+    }
+  });
+  ytFiles.forEach(function(elem){
+    selector.push(elem);
     if(elem!==''){
       var opt = document.createElement('option');
       opt.text = elem;
@@ -240,29 +394,42 @@ function deleteFile(){
 
 function deleteAlert(){
   var i = document.getElementById("selector").selectedIndex;
-  var temp = allFiles[i];
+  var temp = selector[i];
   if(temp!= undefined){
     $("#confirmation").show();
-    
     $("#confText").text(temp + " will be deleted. Are you sure?");
     $("#no").click(function(){
       $("#confirmation").hide();
     });
     $("#yes").click(function(){
-      var storage = firebase.storage();
-      var storageRef = storage.ref();
-      var desertRef = storageRef.child(userId + '/' + temp);
-      desertRef.delete().then(function() {
-        console.log("delete successful");
-        allFiles = remove(temp);
-        loadListView();
+      if(allFiles.includes(temp)){
+        var storage = firebase.storage();
+        var storageRef = storage.ref();
+        var desertRef = storageRef.child(userId + '/' + temp);
+
+        desertRef.delete().then(function() {
+          console.log("delete successful");
+          allFiles = remove(temp, allFiles);
+          var adaNameRef = firebase.database().ref('users/' + userId + '');
+          adaNameRef.child('allFiles').set(getFiles(allFiles));
+          firebase.database().ref('users/' + userId + "/audioFiles/" + temp).remove();
+          loadListView();
+        }).catch(function(error) {
+          console.log("Uh-oh, an error occurred: " + error);
+        });
+      }
+      else{
         var adaNameRef = firebase.database().ref('users/' + userId + '');
-        adaNameRef.child('allFiles').set(getAllFiles());
-        firebase.database().ref('users/' + userId + "/audioFiles/" + temp).remove();
-        deleteModal.style.display = "none";
-      }).catch(function(error) {
-        console.log("Uh-oh, an error occurred: " + error);
-      });
+        ytFiles = remove(temp, ytFiles);
+        firebase.database().ref('users/' + userId + "/youtubeFiles/" + temp).remove();
+        adaNameRef.child('YTFiles').set(getFiles(ytFiles));
+      }
+      deleteModal.style.display = "none";
+      favorites = remove(temp, favorites);
+      loadListView();
+      var adaNameRef = firebase.database().ref('users/' + userId + '');
+      adaNameRef.child('favorites').set(getFiles(favorites));
+      
     });
   }
 }
@@ -311,7 +478,7 @@ function loadNoteListView(){
   sortMap();
   for(var key in map){
     if(key!==''){
-      $("#noteList").append("<li><div class='notes'><div style='display:inline-block;width:50px;height:100%;background-color:#5992DC;padding:10px;margin-right:5px;'><p id='" + key + "' onclick=goTo(this.id) class='time' style='cursor:pointer;'>" + key + "</p></div><p id='" + key + "' onclick=goTo(this.id) class='note' style='cursor:pointer;'>" + map[key] + "</p><button id='" + key + "' class='delete' onclick=deleteNote(this.id) style='float:right;'>Delete</button><button id='" + key + "' class='edit' style='float:right;vertical-align:middle;' onclick=editNote(this.id)>Edit</button></div></li>");
+      $("#noteList").append("<li><div class='notes'><div style='display:inline-block;width:50px;height:100%;background-color:#5992DC;padding:10px;margin-right:5px;'><p id='" + key + "' onclick=goTo(this.id) class='time' style='cursor:pointer;'>" + key + "</p></div><p id='" + key + "' onclick=goTo(this.id) class='note' style='cursor:pointer;'>" + map[key] + "</p><button id='" + key + "' class='delete' onclick=deleteNote(this.id) style='float:right;vertical-align:center;'>Delete</button><button id='" + key + "' class='edit' style='float:right;vertical-align:middle;' onclick=editNote(this.id)>Edit</button></div></li>");
     }
   }
 } 
@@ -350,15 +517,15 @@ function editNote(id){
 var currID = "";
 
 $("#edit").click(function(){
-    if($("#editor").val() !== ''){
-      map[currID] = $("#editor").val();
-      console.log(map);
-      var nameRef = firebase.database().ref('users/' + userId + '/audioFiles/'+ $("#title").text());
-      nameRef.child('notes').set(getAllNotes());
-      loadNoteListView();
-      editModal.style.display = "none";
-    }
-  });
+  if($("#editor").val() !== ''){
+    map[currID] = $("#editor").val();
+    console.log(map);
+    var nameRef = firebase.database().ref('users/' + userId + '/audioFiles/'+ $("#title").text());
+    nameRef.child('notes').set(getAllNotes());
+    loadNoteListView();
+    editModal.style.display = "none";
+  }
+});
 
 function cancelEdit(){
   editModal.style.display = "none";
@@ -391,9 +558,9 @@ function pauseAudio(){
   }
 } 
 
-function remove(x){
+function remove(x, arr){
   var a = [];
-  allFiles.forEach(function(elem){
+  arr.forEach(function(elem){
     if(elem!== '' && elem!==x){
       a.push(elem);
     }
@@ -401,21 +568,51 @@ function remove(x){
   return a;
 }
 
+function downloadNotes(){
+  var notes = getAllNotes();
+  notes = replaceAll(notes, "|||||", "\n");
+  notes = replaceAll(notes, "|||", ": ");
+  download($("#title").text() + ".txt", notes);
+}
+
+function replaceAll(str, find, replace) {
+  while(str.includes(find)){
+    str = str.replace(find, replace);
+  }
+  return str;
+}
+
+function download(filename, text) {
+  var element = document.createElement('a');
+  element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+  element.setAttribute('download', filename);
+
+  element.style.display = 'none';
+  document.body.appendChild(element);
+
+  element.click();
+
+  document.body.removeChild(element);
+}
+
 // When the user clicks on <span> (x), close the modal
 span.click(function() {
-  modal.style.display = "none";
   deleteModal.style.display = "none";
   editModal.style.display = "none";
+  if(!uploading){
+    modal.style.display = "none";
+    ytModal.style.display = "none";
+  }
 });
 
 // When the user clicks anywhere outside of the modal, close it
 window.onclick = function(event) {
-  if (event.target == modal || event.target == deleteModal || event.target == editModal) {
-      if(!uploading){
-        modal.style.display = "none";
-      }
-      deleteModal.style.display = "none";
-      editModal.style.display = "none";
+  if (event.target == modal || event.target == deleteModal || event.target == editModal || event.target == ytModal) {
+    if(!uploading){
+      modal.style.display = "none";
+      ytModal.style.display = "none";
+    }
+    deleteModal.style.display = "none";
+    editModal.style.display = "none";
   }
-
 }
