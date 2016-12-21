@@ -16,38 +16,52 @@
       <center style="display: inline-block; text-align: center; width:60%;">
         <div class="searchBar" style="display: inline-block; text-align: center; width:100%;">
           <input id="search" placeholder="Search" onkeyup=liveSearch()>
+          <span class="close" onclick=clearSearch() style="float: none;">×</span>
         </div>
       </center>
       <button id="SignoutButton" style="display: inline-block;">Sign out</button>
-      <p id="welcome" style="margin-top:15px;display: inline-block;"></p>
+      <p id="welcome" style="margin-top:15px;display: block;"></p>
       <button id="backButton" onclick=goBack()>Back</button>
-      <h2 class="player" id="title" style="color:#6EBDB7;margin-bottom:10px;margin-top:5px;text-align: center;font-size: 30px;"></h2>
+      <h2 class="player" id="title" style="color:#6EBDB7;margin-bottom:10px;margin-top:-15px;text-align: center;font-size: 30px;"></h2>
     </div>
     </div>
 </head>
 
 <body style="background-color: #f1f1f1;">
 
-<div class="menu" style="background: #f6f6f6;padding-bottom:10px; border-style: hidden hidden inset hidden; border-color: #f1f1f1;width: 100%; min-width: 1150px;">
+<div class="menu" style="background: #f6f6f6;padding-bottom:10px; border-style: hidden hidden inset hidden; border-color: #e1e1e1;width: 100%; min-width: 1150px;">
   <button id="newFile" onclick=createFile()>New File</button>
+  <button id="newYoutube" onclick=createYoutube()>New Youtube</button>
   <button id="deleteFile" style="color:red;" onclick=deleteFile()>Delete File</button>
 </div>
 
-<div id="myModal" class="modal">
+<div id="myModal" class="modal" style="vertical-align: center;">
   <div class="modal-content">
     <span class="close">×</span>
-    <input type="file" name="myfile" accept="audio/mp3" id="fileChooser" style="margin-bottom:5px;"></input>
+    <input type="file" name="myfile" accept="audio/mp3" id="fileChooser" style="margin-bottom:15px;"></input>
     <br>
-    <input id="fileName" placeholder="File name" type="text" style="margin-bottom:5px;">
-    <button id="uploadButton" style="margin-bottom:5px;">Upload</button>
+    <input id="fileName" placeholder="File name" type="text" style="margin-bottom:15px;width: 250px;">
+    <button id="uploadButton" style="margin-bottom:15px;">Upload</button>
     <p id="fae">Invalid File name or a File with this name already exists.</p>
     <br>
-    <progress value="0" max="100" id="uploader">0%</progress>
+    <progress value="0" max="100" id="uploader" style="width: 250px;">0%</progress>
+  </div>
+</div>
+
+<div id="ytModal" class="modal" style="vertical-align: center;">
+  <div class="modal-content">
+    <span class="close">×</span>
+    <input type="text" id="ytLink" placeholder="Youtube URL" style="margin-bottom:15px;width: 250px;"></input>
+    <p id="ue" style="display: none;">Invalid URL or a File with this video already exists.</p>
+    <br>
+    <input id="ytFileName" placeholder="File name" type="text" style="margin-bottom:15px;width: 250px;">
+    <button id="createButton" onclick="createYT()" style="margin-bottom:15px;">Create</button>
+    <p id="faee" style="display: none;">Invalid File name or a File with this name already exists.</p>
   </div>
 </div>
 
 <div id="deleteModal" class="modal">
-  <div class="modal-content">
+  <div class="modal-content" style="min-height: 50px;">
     <span class="close">×</span>
     <select id="selector" style="width:25%;min-width:150px;"></select>
     <button id="deleteButton" style="color:red;" onclick=deleteAlert()>Delete</button>
@@ -85,44 +99,40 @@
 
   <div id="table-list" style="display:inline-block;position:absolute;margin-left: 5px;width: 84%;min-width:975px;padding: 0.3%;background-color: #fefefe;">
     <style>
-    table {
-        font-family: arial, sans-serif;
-        border-collapse: collapse;
-        width: 100%;
-        height: 100%;
-    }
+      table {
+          font-family: arial, sans-serif;
+          border-collapse: collapse;
+          width: 100%;
+          
+      }
 
-    td{
-        text-align: left;
+      td{
+          text-align: left;
+          padding: 5px;
+      }
+
+      th{
+        text-align: center;
         padding: 5px;
+        padding-left: 10px;
+      }
 
-    }
+      td, th{
 
-    th{
-      text-align: center;
-      padding: 5px;
-      padding-left: 10px;
-    }
+        border: 1px solid #dddddd;
+        border-style: inset hidden inset hidden;
+      }
 
-    td, th{
-
-      border: 1px solid #dddddd;
-      border-style: inset hidden inset hidden;
-    }
-
-    tr td:nth-child(2), td:nth-child(3) { /* I don't think they are 0 based */
-   text-align: center;
-}
-    
-
+      tr td:nth-child(2) { /* I don't think they are 0 based */
+        text-align: center;
+      }
     </style>
+
     <table id="table">
       <col width="200">
-      <col width="200">
-      <col width="3">
+      <col width="100">
       <tr style="background-color: #f0f0f0;">
         <th align="center">File Name</th>
-        <th>Uploaded On</th>
         <th>Favorite</th>
       </tr>
     </table>
@@ -131,10 +141,13 @@
 </div>
 
 
-<div class="player" style="margin-top:25px;display: hidden;min-width: 1210px;">
+<div class="player" style="display: hidden;min-width: 1210px;">
+  <div style="background-color: #f6f6f6;height:50px;border-style: hidden hidden inset hidden; border-color: #e1e1e1;width: 100%; min-width: 1150px;">
+    <button id="downloadNB" onclick="downloadNotes()" style="float: right;margin-top:10px;font-size: 18px;">Download Notes</button><br>
+  </div>
   <center>
     <h1 id="title" style="color:#5992DC;margin-bottom:10px;"></h1>
-    <audio id="audio" style="width:75%;min-width:300px;margin-bottom:10px;" controls>
+    <audio id="audio" style="width:75%;min-width:1000px;margin-bottom:10px;" controls>
       <source id="mp3Source" type="audio/mp3" src=""></source>
     </audio>
   </center>
@@ -147,12 +160,10 @@
       <button id="addNote" onclick=addNote()>Add</button>
     </center>
     <br>
-    <input type="checkbox" style="margin: 10px;display: inline-block;" id="continue"><p style="color: #fbfbfb;display: inline-block;font-size: 16px;">Keep the audio playing</p></input>
+    <input type="checkbox" style="margin: 10px;margin-left:20px;display: inline-block;" id="continue"><p style="color: #fbfbfb;display: inline-block;font-size: 16px;">Keep the audio playing</p></input>
   </div>
 </div>
 
 
 <script src="player.js"></script>
 </body>
-
-
