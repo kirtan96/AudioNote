@@ -54,6 +54,7 @@ firebase.auth().onAuthStateChanged(u => {
 
 $("#backButton").hide();
 $(".player").hide();
+$(".ytPlayer").hide();
 var user = firebase.auth().currentUser;
 var userId;
 var SignoutButton = $("#SignoutButton");
@@ -63,6 +64,7 @@ var favorites = [];
 var selector = [];
 var map = {};
 var uploading = false;
+var player;
 
 // Get the modal
 var modal = document.getElementById('myModal');
@@ -335,18 +337,87 @@ function playAudio(id){
   setAudio(id);
 }
 
+function playYT(id){
+  $(".li").hide();
+  $(".searchBar").hide();
+  $(".menu").hide();
+  $("#backButton").show();
+  $(".ytPlayer").show();
+  $("#ytTitle").text(id);
+  $("#head").hide();
+  $(".mainpage").hide();
+  map={};
+  $("#noteList").empty();
+  var ytid = getYTId(id);
+  getYTReady(ytid);
+}
+
+function getYTId(id){
+  firebase.database().ref('/users/' + userId + '/youtubeFiles/'+id).once('value').then(function(snapshot) {
+    var ytid = snapshot.val().id;
+    var ns = snapshot.val().notes;
+    if(ns!==undefined){
+      getNotesFromDB(ns);
+      loadNoteListView();
+    }
+    return ytid;
+  });
+}
+
 function setAudio(id){
   firebase.database().ref('/users/' + userId + '/audioFiles/'+id).once('value').then(function(snapshot) {
-      var url = snapshot.val().audioURL;
-      var ns = snapshot.val().notes;
-      if(ns!==undefined){
-        getNotesFromDB(ns);
-        loadNoteListView();
-      }
-      source.src=url;
-      audio.load(); //call this to just preload the audio without playing
-      audio.play();
+    var url = snapshot.val().audioURL;
+    var ns = snapshot.val().notes;
+    if(ns!==undefined){
+      getNotesFromDB(ns);
+      loadNoteListView();
+    }
+    source.src=url;
+    audio.load(); //call this to just preload the audio without playing
+    audio.play();
   });
+}
+
+function getYTReady(id){
+  var tag = document.createElement('script');
+
+      tag.src = "https://www.youtube.com/iframe_api";
+      var firstScriptTag = document.getElementsByTagName('script')[0];
+      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+      // 3. This function creates an <iframe> (and YouTube player)
+      //    after the API code downloads.
+      var player;
+      function onYouTubeIframeAPIReady() {
+        player = new YT.Player('player', {
+          height: '390',
+          width: '640',
+          videoId: 'M7lc1UVf-VE',
+          events: {
+            'onReady': onPlayerReady,
+            'onStateChange': onPlayerStateChange
+          }
+        });
+      }
+
+      // 4. The API will call this function when the video player is ready.
+      function onPlayerReady(event) {
+        event.target.playVideo();
+      }
+
+      // 5. The API calls this function when the player's state changes.
+      //    The function indicates that when playing a video (state=1),
+      //    the player should play for six seconds and then stop.
+      var done = false;
+      function onPlayerStateChange(event) {
+        if (event.data == YT.PlayerState.PLAYING && !done) {
+          setTimeout(stopVideo, 6000);
+          done = true;
+        }
+      }
+      function stopVideo() {
+        player.stopVideo();
+      }
 }
 
 function goBack(){
@@ -355,6 +426,7 @@ function goBack(){
   $(".menu").show();
   $("#backButton").hide();
   $(".player").hide();
+  $(".ytPlayer").hide();
   $("#head").show();
   $(".mainpage").show();
   audio.pause();
@@ -573,6 +645,13 @@ function downloadNotes(){
   notes = replaceAll(notes, "|||||", "\n");
   notes = replaceAll(notes, "|||", ": ");
   download($("#title").text() + ".txt", notes);
+}
+
+function downloadYTNotes(){
+  var notes = getAllNotes();
+  notes = replaceAll(notes, "|||||", "\n");
+  notes = replaceAll(notes, "|||", ": ");
+  download($("#ytTitle").text() + ".txt", notes);
 }
 
 function replaceAll(str, find, replace) {
